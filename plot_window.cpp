@@ -41,14 +41,10 @@ PlotWindow::PlotWindow(
    exitAction->setStatusTip( tr("Exit program.") );
    connect( exitAction, &QAction::triggered, this, &PlotWindow::exitProgram );
 
-   // make toolbar
-   ui->mainToolBar->addAction( runAction );
-   ui->mainToolBar->addSeparator();
-   ui->mainToolBar->addAction( exitAction );
-
    // create dock for labels
-   QDockWidget *labelDock = new QDockWidget( "Labels", this );
-   QGridLayout *labelLayout = new QGridLayout;
+   QDockWidget *labelDock = new QDockWidget( tr("Labels"), this );
+   QWidget *dockWidget = new QWidget( labelDock );
+   QGridLayout *labelLayout = new QGridLayout( labelDock );
    labelLayout->setColumnStretch( 0, 0 );
    labelLayout->setColumnStretch( 1, 1 );
    labelLayout->setColumnStretch( 2, 0 );
@@ -57,8 +53,17 @@ PlotWindow::PlotWindow(
    labelLayout->addWidget( addLabel, 0, 0 );
    labelLayout->addItem( spacer,   1, 0 );
 
-   labelDock->setLayout( labelLayout );
+   dockWidget->setLayout( labelLayout );
+   labelDock->setWidget( dockWidget );
+   labelDock->setAllowedAreas( Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea );
+   addDockWidget( Qt::RightDockWidgetArea, labelDock );
 
+   // make toolbar
+   ui->mainToolBar->addAction( runAction );
+   ui->mainToolBar->addSeparator();
+   ui->mainToolBar->addAction( labelDock->toggleViewAction() );
+   ui->mainToolBar->addSeparator();
+   ui->mainToolBar->addAction( exitAction );
 
    // decorate window
    setWindowTitle( tr("PDE PathTracer") );
@@ -128,13 +133,12 @@ void PlotWindow::inputData(
    varNames   = readEntry<QStringList>( inputFile, SECTION_NAMES, "variable_names",  QStringList() );
 
    // label indexes & count
-   QStringList labelNames;
    labelNames = readEntry<QStringList>( inputFile, SECTION_PLOT, "label_parameters", QStringList() );
-   labelIndex.resize( labelNames.size() );
+   labelParamIndex.resize( labelNames.size() );
    for( int i = 0; i < labelNames.size(); i++ ){
       for( int j = 0; j < paramNames.size(); j++ ){
          if( labelNames[i] == paramNames[j] )
-            labelIndex[i] = j;
+            labelParamIndex[i] = j;
       }
    }
 

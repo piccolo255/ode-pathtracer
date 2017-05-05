@@ -89,7 +89,9 @@ private:
    double dt;
 
    // Labels
-   QVector<int> labelIndex;
+   QStringList labelNames;
+   QVector<int> labelParamIndex;
+   QVector<int> labelDockRow;
 
    // Plot parameters
    QString plotTransformX;
@@ -104,6 +106,9 @@ private:
    QStringList tokenizeString( QString &str );
    void toggleSimulationRun( bool toggled );
    void exitProgram( bool checked = false );
+   void addParamLabel( QString name, bool removable = true );
+   void removeParamLabel( QString name );
+   void updateParamLabels( PointValues values );
 
    template <class T> T readEntry(
       //boost::property_tree::ptree pt
