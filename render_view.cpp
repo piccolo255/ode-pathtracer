@@ -29,6 +29,7 @@ RenderView::RenderView(
 //      qDebug() << "--- param count = " << paramVals.size() << " or " << paramNames.size();
       for( auto parser : coordinateParsers ){
 //         qDebug() << "--- parser";
+         parser->DefineVar( "t", &t );
          for( int i = 0; i < paramVals.size(); i++  ){
             parser->DefineVar( paramNames[i].toStdString(), &(paramVals[i]) );
 //            qDebug() << "------ registered param " << paramNames[i];
@@ -54,29 +55,40 @@ RenderView::~RenderView(
 
 void RenderView::updateObjects(
    QList<PointValues> pointPathList
+ , int maxPathLength
 ){
    double x, y;
-   pointPath = QPainterPath();
    bool firstPoint = true;
+   QPointF p1, p2;
+   segments.clear();
+   segments.reserve( pointPathList.size() );
 
    for( auto &point : pointPathList ){
+      t = point.T;
       for( int i = 0; i < paramVals.size(); i++  ){
          paramVals[i] = point.Param[i];
       }
       try {
          x = coordinateParsers[0]->Eval();
          y = coordinateParsers[1]->Eval();
-//         qDebug() << "Point ( " << x << ", " << y << " )";
+         //qDebug() << "Point ( " << x << ", " << y << " )";
       } catch( mu::Parser::exception_type &e ){
          ParserError( e );
       }
 
       if( firstPoint ){
-         pointPath.moveTo( x, y );
+         p1 = QPoint( x, y );
          firstPoint = false;
       } else {
-         pointPath.lineTo( x, y );
+         p2 = p1;
+         p1 = QPointF( x, y );
+         segments.append( QLineF( p1, p2 ) );
       }
+   }
+
+   if( maxPathLength != maxSegments ){
+      maxSegments = maxPathLength;
+      updateColors();
    }
 }
 
@@ -111,6 +123,20 @@ void RenderView::updateViewRect( QSize newViewRectSize ){
    viewRect.setRect( x, y, w, h );
 }
 
+void RenderView::updateColors(
+){
+   float h, s, v;
+
+   colors.resize( maxSegments );
+
+   for( int i = 0; i < colors.size(); i++ ){
+      h = 0;
+      s = 0 + 1.0/maxSegments*i;
+      v = 0 + 1.0/maxSegments*i;
+      colors[i].setHsvF( h, s, v );
+   }
+}
+
 void RenderView::ParserError(
    mu::ParserBase::exception_type &e
 ){
@@ -140,10 +166,14 @@ void RenderView::paintEvent(
 //   qDebug() << "World: " << painter.window();
 
    // draw particle path
-   painter.setPen( QPen( QBrush( Qt::black ), 0 ) );
-   painter.drawPath( pointPath );
+   // draw lines backwards, from old to new
+   for( int i = segments.size()-1; i >= 0; i-- ){
+      painter.setPen( QPen( QBrush( colors[i] ), 0 ) );
+      painter.drawLine( segments[i] );
+   }
 
    // draw axes
+   painter.setPen( QPen( QBrush( Qt::blue ), 0 ) );
    painter.drawLine( viewRect.x(), 0, viewRect.x()+viewRect.width(), 0 );
    painter.drawLine( 0, viewRect.y(), 0,  viewRect.y()+viewRect.height() );
 

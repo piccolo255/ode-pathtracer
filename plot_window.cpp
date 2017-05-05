@@ -18,15 +18,15 @@ PlotWindow::PlotWindow(
 
    // create render widget
    views.push_back( new RenderView( plotViewport, plotTransformX, plotTransformY, paramNames ) );
-   views.push_back( new RenderView( plotViewport, plotTransformX, plotTransformY, paramNames ) );
+   //views.push_back( new RenderView( plotViewport, plotTransformX, plotTransformY, paramNames ) );
 
 
    // set layout
    QGridLayout *mainLayout = new QGridLayout;
    mainLayout->setColumnStretch( 0, 1 );
-   mainLayout->setColumnStretch( 1, 1 );
+   //mainLayout->setColumnStretch( 1, 1 );
    mainLayout->addWidget( views[0], 0, 0 );
-   mainLayout->addWidget( views[1], 0, 1 );
+   //mainLayout->addWidget( views[1], 0, 1 );
    ui->centralWidget->setLayout( mainLayout );
 
    // create actions
@@ -41,11 +41,23 @@ PlotWindow::PlotWindow(
    exitAction->setStatusTip( tr("Exit program.") );
    connect( exitAction, &QAction::triggered, this, &PlotWindow::exitProgram );
 
-
    // make toolbar
    ui->mainToolBar->addAction( runAction );
    ui->mainToolBar->addSeparator();
    ui->mainToolBar->addAction( exitAction );
+
+   // create dock for labels
+   QDockWidget *labelDock = new QDockWidget( "Labels", this );
+   QGridLayout *labelLayout = new QGridLayout;
+   labelLayout->setColumnStretch( 0, 0 );
+   labelLayout->setColumnStretch( 1, 1 );
+   labelLayout->setColumnStretch( 2, 0 );
+   QComboBox   *addLabel = new QComboBox();
+   QSpacerItem *spacer   = new QSpacerItem( 0, 0, QSizePolicy::Fixed , QSizePolicy::MinimumExpanding );
+   labelLayout->addWidget( addLabel, 0, 0 );
+   labelLayout->addItem( spacer,   1, 0 );
+
+   labelDock->setLayout( labelLayout );
 
 
    // decorate window
@@ -90,7 +102,7 @@ void PlotWindow::updateView(
       pointPath.removeLast();
 
    for( auto v : views ){
-      v->updateObjects( pointPath );
+      v->updateObjects( pointPath, plotMaxPathSegments );
    }
 
    for( auto v : views ){

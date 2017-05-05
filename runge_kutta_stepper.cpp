@@ -79,6 +79,7 @@ void RungeKuttaStepper::SetConditions(
 
    // calculate initial parameter values
    init.Param.resize( paramCount );
+   t = init.T;
    for( int i = 0; i < varCount; i++ )
       vars[i] = init.Val[i];
    for( int i = 0; i < paramCount; i++ )

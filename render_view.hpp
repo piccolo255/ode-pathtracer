@@ -25,7 +25,7 @@ public:
                       , QStringList paramNames
                       , QWidget *parent = 0 );
    ~RenderView();
-   void updateObjects( QList<PointValues> pointPathList );
+   void updateObjects( QList<PointValues> pointPathList, int maxPathLength );
 
 private:
    QRect viewRect;
@@ -41,9 +41,12 @@ private:
    QVector<double> paramVals;
    QVector<mu::Parser *> coordinateParsers;
 
-   QPainterPath pointPath;
+   QVector<QLineF> segments;
+   QVector<QColor> colors;
+   int maxSegments = 0;
 
    void updateViewRect( QSize newViewRectSize );
+   void updateColors();
    void ParserError( mu::Parser::exception_type &e );
 
 signals:
