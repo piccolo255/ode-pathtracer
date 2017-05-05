@@ -1,7 +1,7 @@
-# PDE PathTracer
+# ODE PathTracer
 (Personal project, currently very rough.)
 
-General PDE solver that plots a trace of the variables in real time. Uses the third order Runge-Kutta scheme.
+General ODE solver that plots a trace of the variables in real time. Uses the third order Runge-Kutta scheme.
 
 ## Requirements
 
