@@ -22,7 +22,7 @@
 //#include <boost/tokenizer.hpp>
 
 // Local headers
-#include "pde_pathtracer.hpp"
+#include "ode_pathtracer.hpp"
 #include "runge_kutta_stepper.hpp"
 #include "render_view.hpp"
 #include "simulation_loop.hpp"
@@ -89,9 +89,11 @@ private:
    double dt;
 
    // Labels
+   QStringList labelNamesConfig;
    QStringList labelNames;
-   QVector<int> labelParamIndex;
-   QVector<int> labelDockRow;
+   QMap<QString, int> labelParamIndex;
+   QMap<QString, QLabel*> valueLabels;
+   QGridLayout *labelLayout;
 
    // Plot parameters
    QString plotTransformX;

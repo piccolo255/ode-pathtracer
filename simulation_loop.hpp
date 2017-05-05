@@ -8,7 +8,7 @@
 #include <QElapsedTimer>
 
 // Local headers
-#include "pde_pathtracer.hpp"
+#include "ode_pathtracer.hpp"
 #include "runge_kutta_stepper.hpp"
 
 class SimulationLoop : public QThread

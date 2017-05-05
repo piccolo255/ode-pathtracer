@@ -35,7 +35,7 @@ HEADERS  += \
    runge_kutta_stepper.hpp \
    render_view.hpp \
    simulation_loop.hpp \
-   pde_pathtracer.hpp
+    ode_pathtracer.hpp
 
 FORMS    += plot_window.ui
 

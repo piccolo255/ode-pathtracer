@@ -13,7 +13,7 @@
 #include "muParser.h"
 
 // Local includes
-#include "pde_pathtracer.hpp"
+#include "ode_pathtracer.hpp"
 
 class RenderView : public QWidget
 {

@@ -13,7 +13,7 @@
 #include "muParser.h"
 
 // Local headers
-#include "pde_pathtracer.hpp"
+#include "ode_pathtracer.hpp"
 
 enum class DerivationMode{
    None

@@ -44,19 +44,36 @@ PlotWindow::PlotWindow(
    // create dock for labels
    QDockWidget *labelDock = new QDockWidget( tr("Labels"), this );
    QWidget *dockWidget = new QWidget( labelDock );
-   QGridLayout *labelLayout = new QGridLayout( labelDock );
+   // dock - create layout
+   labelLayout = new QGridLayout( dockWidget );
    labelLayout->setColumnStretch( 0, 0 );
    labelLayout->setColumnStretch( 1, 1 );
    labelLayout->setColumnStretch( 2, 0 );
+   // dock - combo box for adding new labels
    QComboBox   *addLabel = new QComboBox();
+   QStringList paramNamesSorted( paramNames );
+   paramNamesSorted.sort();
+   addLabel->addItem( "" );
+   addLabel->addItems( paramNamesSorted );
+   // dock - spacer to push labels to the top
    QSpacerItem *spacer   = new QSpacerItem( 0, 0, QSizePolicy::Fixed , QSizePolicy::MinimumExpanding );
-   labelLayout->addWidget( addLabel, 0, 0 );
-   labelLayout->addItem( spacer,   1, 0 );
-
+   // dock - add items
+   labelLayout->addWidget( addLabel, 0, 1 );
+   labelLayout->addItem( spacer,   1, 1 );
+   // dock - finalize
    dockWidget->setLayout( labelLayout );
    labelDock->setWidget( dockWidget );
    labelDock->setAllowedAreas( Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea );
+   QSizePolicy sp;
+   sp.setHorizontalPolicy( sp.Fixed );
+   labelDock->setSizePolicy( sp );
    addDockWidget( Qt::RightDockWidgetArea, labelDock );
+
+   // add predefined labels
+   addParamLabel( "t", false );
+   for( auto name : labelNamesConfig ){
+      addParamLabel( name );
+   }
 
    // make toolbar
    ui->mainToolBar->addAction( runAction );
@@ -66,7 +83,7 @@ PlotWindow::PlotWindow(
    ui->mainToolBar->addAction( exitAction );
 
    // decorate window
-   setWindowTitle( tr("PDE PathTracer") );
+   setWindowTitle( tr("ODE PathTracer") );
 
    // prepare stepper
    stepper = new RungeKuttaStepper;
@@ -113,6 +130,8 @@ void PlotWindow::updateView(
    for( auto v : views ){
       v->repaint();
    }
+
+   updateParamLabels( newPoint );
 }
 
 void PlotWindow::ThrowError(
@@ -132,15 +151,8 @@ void PlotWindow::inputData(
    paramNames = readEntry<QStringList>( inputFile, SECTION_NAMES, "parameter_names", QStringList() );
    varNames   = readEntry<QStringList>( inputFile, SECTION_NAMES, "variable_names",  QStringList() );
 
-   // label indexes & count
-   labelNames = readEntry<QStringList>( inputFile, SECTION_PLOT, "label_parameters", QStringList() );
-   labelParamIndex.resize( labelNames.size() );
-   for( int i = 0; i < labelNames.size(); i++ ){
-      for( int j = 0; j < paramNames.size(); j++ ){
-         if( labelNames[i] == paramNames[j] )
-            labelParamIndex[i] = j;
-      }
-   }
+   // label names
+   labelNamesConfig = readEntry<QStringList>( inputFile, SECTION_PLOT, "label_parameters", QStringList() );
 
    // parameter equations
    paramRules.resize( paramNames.size() );
@@ -212,5 +224,77 @@ void PlotWindow::exitProgram(
    } else {
       // exit
       this->close();
+   }
+}
+
+void PlotWindow::addParamLabel(
+   QString name
+ , bool removable
+){
+   if( labelParamIndex.contains( name ) ){
+      std::cerr << "Can't set label: duplicate parameter '" << name.toStdString() << "'" << std::endl;
+      return;
+   }
+
+   // set param index
+   if( name == "t" ){
+      // time parameter is not in the param vector,
+      // so it requires special handling
+      labelParamIndex[name] = -1;
+   } else {
+      int index = paramNames.indexOf( QRegExp(name) );
+      if( index < 0 ){
+         // item not found
+         std::cerr << "Can't set label: unknown parameter '" << name.toStdString() << "'" << std::endl;
+         return;
+      }
+      labelParamIndex[name] = index;
+   }
+
+   // need to insert a new row above combo box
+   int rows = labelLayout->rowCount();
+
+   // move combo box and spacer one down
+   QWidget *cb = labelLayout->itemAtPosition( rows-2, 1 )->widget();
+   QSpacerItem *spacer = labelLayout->itemAtPosition( rows-1, 1 )->spacerItem();
+   labelLayout->removeItem( spacer );
+   labelLayout->removeWidget( cb );
+   labelLayout->addWidget( cb, rows-1, 1 );
+   labelLayout->addItem( spacer, rows, 1 );
+
+   // add new label - title
+   QLabel *titleLabel = new QLabel( name, labelLayout->parentWidget() );
+   labelLayout->addWidget( titleLabel, rows-2, 0 );
+
+   // add new label - value
+   QLabel *valueLabel = new QLabel( "---", labelLayout->parentWidget() );
+   valueLabel->setAlignment( Qt::AlignRight | Qt::AlignCenter );
+   valueLabel->setTextInteractionFlags( Qt::TextInteractionFlag::TextSelectableByMouse | Qt::TextInteractionFlag::TextSelectableByKeyboard );
+   labelLayout->addWidget( valueLabel, rows-2, 1 );
+
+   // add new label - remove box
+   if( removable ){
+      QLabel *removeLabel = new QLabel( "<font color=red>x</font>", labelLayout->parentWidget() );
+
+      labelLayout->addWidget( removeLabel, rows-2, 2 );
+   }
+
+   labelNames.push_back( name );
+   valueLabels[name] = valueLabel;
+}
+
+void PlotWindow::updateParamLabels(
+   PointValues values
+){
+   QString val;
+   for( auto name : labelNames ){
+      int pi = labelParamIndex[name];
+      if( pi < 0 ){
+         // time
+         val = QString::number( values.T );
+      } else {
+         val = QString::number( values.Param[pi] );
+      }
+      valueLabels[name]->setText( val );
    }
 }

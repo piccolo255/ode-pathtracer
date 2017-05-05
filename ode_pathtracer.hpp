@@ -1,5 +1,5 @@
-#ifndef PDE_PATH_TRACER_HPP
-#define PDE_PATH_TRACER_HPP
+#ifndef ODE_PATH_TRACER_HPP
+#define ODE_PATH_TRACER_HPP
 
 // Qt headers
 #include <QtDebug>
@@ -19,4 +19,4 @@ typedef QVector<Equation> EquationVector;
 typedef QPair<QString, QString> Derivation; // variable name and d/dt
 typedef QVector<Derivation> DerivationVector;
 
-#endif // PDE_PATH_TRACER_HPP
+#endif // ODE_PATH_TRACER_HPP
