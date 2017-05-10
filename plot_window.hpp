@@ -98,10 +98,13 @@ private:
    QStringList labelNamesConfig;
    LabelDockWidget *dockWidget;
 
-   QStringList labelNames;
-   QMap<QString, int> labelParamIndex;
-   QMap<QString, QLabel*> valueLabels;
-   QGridLayout *labelLayout;
+   QGridLayout *mainLayout;
+   QDockWidget *labelDock;
+
+//   QStringList labelNames;
+//   QMap<QString, int> labelParamIndex;
+//   QMap<QString, QLabel*> valueLabels;
+//   QGridLayout *labelLayout;
 
    // Plot parameters
    QString plotTransformX;
@@ -116,6 +119,8 @@ private:
    QStringList tokenizeString( QString &str );
    void toggleSimulationRun( bool toggled );
    void exitProgram( bool checked = false );
+   void openProblem( const QString filename );
+   void closeProblem();
 
    template <class T> T readEntry(
       QSettings *inputFile

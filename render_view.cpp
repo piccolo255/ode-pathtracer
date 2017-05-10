@@ -120,6 +120,7 @@ void RenderView::updateViewRect( QSize newViewRectSize ){
 //   qDebug() << "Canvas size: " << newW << " x " << newH
 //            << " \tNew viewport: (" << x << ", " << y << ") " << w << " x " << h;
 
+   // set viewport rectangle, flipping it so that y axis points up
    viewRect.setRect( x, y+h, w, -h );
 }
 

@@ -9,24 +9,24 @@ PlotWindow::PlotWindow(
 {
    ui->setupUi( this );
 
-   // load input file
-   inputData( "input.ini" );
+//   // load input file
+//   inputData( filename );
 
 //   qDebug() << "Initial values: t = " << initialValues.T << ", " << initialValues.Val;
 
-   pointPath.clear();
+//   pointPath.clear();
 
-   // create render widget
-   views.push_back( new RenderView( plotViewport, plotTransformX, plotTransformY, paramNames ) );
-   //views.push_back( new RenderView( plotViewport, plotTransformX, plotTransformY, paramNames ) );
+//   // create render widget
+//   views.push_back( new RenderView( plotViewport, plotTransformX, plotTransformY, paramNames ) );
+//   //views.push_back( new RenderView( plotViewport, plotTransformX, plotTransformY, paramNames ) );
 
    // set layout
-   QGridLayout *mainLayout = new QGridLayout;
-   mainLayout->setColumnStretch( 0, 1 );
-   //mainLayout->setColumnStretch( 1, 1 );
-   mainLayout->addWidget( views[0], 0, 0 );
-   //mainLayout->addWidget( views[1], 0, 1 );
-   ui->centralWidget->setLayout( mainLayout );
+   mainLayout = new QGridLayout( ui->centralWidget );
+//   mainLayout->setColumnStretch( 0, 1 );
+//   mainLayout->setColumnStretch( 1, 1 );
+//   mainLayout->addWidget( views[0], 0, 0 );
+//   mainLayout->addWidget( views[1], 0, 1 );
+//   ui->centralWidget->setLayout( mainLayout );
 
    // create actions
    QAction *runAction = new QAction( tr("&Run"), this );
@@ -41,18 +41,18 @@ PlotWindow::PlotWindow(
    connect( exitAction, &QAction::triggered, this, &PlotWindow::exitProgram );
 
    // create dock for labels
-   QDockWidget *labelDock = new QDockWidget( tr("Labels"), this );
-   dockWidget = new LabelDockWidget( paramNames, labelDock );
-   connect( this, &PlotWindow::updateParamLabels, dockWidget, &LabelDockWidget::updateParamLabels );
-   labelDock->setWidget( dockWidget );
+   labelDock = new QDockWidget( tr("Labels"), this );
+//   dockWidget = new LabelDockWidget( paramNames, labelDock );
+//   connect( this, &PlotWindow::updateParamLabels, dockWidget, &LabelDockWidget::updateParamLabels );
+//   labelDock->setWidget( dockWidget );
    labelDock->setAllowedAreas( Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea );
    addDockWidget( Qt::RightDockWidgetArea, labelDock );
 
-   // add predefined labels
-   dockWidget->addParamLabel( "t", false );
-   for( auto name : labelNamesConfig ){
-      dockWidget->addParamLabel( name );
-   }
+//   // add predefined labels
+//   dockWidget->addParamLabel( "t", false );
+//   for( auto name : labelNamesConfig ){
+//      dockWidget->addParamLabel( name );
+//   }
 
    // make toolbar
    ui->mainToolBar->addAction( runAction );
@@ -64,16 +64,18 @@ PlotWindow::PlotWindow(
    // decorate window
    setWindowTitle( tr("ODE PathTracer") );
 
-   // prepare stepper
-   stepper = new RungeKuttaStepper;
-   stepper->SetConditions( varRules, paramRules, initialValues, dt );
+//   // prepare stepper
+//   stepper = new RungeKuttaStepper;
+//   stepper->SetConditions( varRules, paramRules, initialValues, dt );
 
    // start simulation
    qRegisterMetaType<PointValues>();
-   simulation = new SimulationLoop( plotMaxFPS, plotSkip, stepper );
-   connect( simulation, &SimulationLoop::updateView, this, &PlotWindow::updateView );
-   simulation->suspend();
-   simulation->start();
+//   simulation = new SimulationLoop( plotMaxFPS, plotSkip, stepper );
+//   connect( simulation, &SimulationLoop::updateView, this, &PlotWindow::updateView );
+//   simulation->suspend();
+//   simulation->start();
+
+   openProblem( "input.ini" );
 }
 
 PlotWindow::~PlotWindow(
@@ -206,4 +208,46 @@ void PlotWindow::exitProgram(
       // exit
       this->close();
    }
+}
+
+void PlotWindow::openProblem(
+   const QString filename
+){
+   // load input file
+   inputData( filename );
+
+   // create render surface(s)
+   views.push_back( new RenderView( plotViewport, plotTransformX, plotTransformY, paramNames ) );
+
+   // add render surfaces to main window
+   mainLayout->addWidget( views[0], 0, 0 );
+
+   // set dock widget for labels
+   dockWidget = new LabelDockWidget( paramNames, labelDock );
+   connect( this, &PlotWindow::updateParamLabels, dockWidget, &LabelDockWidget::updateParamLabels );
+   labelDock->setWidget( dockWidget );
+
+   // add predefined labels to label dock
+   dockWidget->addParamLabel( "t", false );
+   for( auto name : labelNamesConfig ){
+      dockWidget->addParamLabel( name );
+   }
+
+   // update window title
+   setWindowTitle( filename + tr(" ODE PathTracer") );
+
+   // prepare stepper
+   stepper = new RungeKuttaStepper;
+   stepper->SetConditions( varRules, paramRules, initialValues, dt );
+
+   // start simulation
+   simulation = new SimulationLoop( plotMaxFPS, plotSkip, stepper );
+   connect( simulation, &SimulationLoop::updateView, this, &PlotWindow::updateView );
+   simulation->suspend();
+   simulation->start();
+}
+
+void PlotWindow::closeProblem(
+){
+
 }
