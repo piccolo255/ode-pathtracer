@@ -120,7 +120,7 @@ void RenderView::updateViewRect( QSize newViewRectSize ){
 //   qDebug() << "Canvas size: " << newW << " x " << newH
 //            << " \tNew viewport: (" << x << ", " << y << ") " << w << " x " << h;
 
-   viewRect.setRect( x, y, w, h );
+   viewRect.setRect( x, y+h, w, -h );
 }
 
 void RenderView::updateColors(
