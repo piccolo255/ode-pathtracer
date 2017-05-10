@@ -28,14 +28,16 @@ SOURCES += \
    plot_window.cpp \
    runge_kutta_stepper.cpp \
    render_view.cpp \
-   simulation_loop.cpp
+   simulation_loop.cpp \
+   label_dock_widget.cpp
 
 HEADERS  += \
    plot_window.hpp \
    runge_kutta_stepper.hpp \
    render_view.hpp \
    simulation_loop.hpp \
-    ode_pathtracer.hpp
+   ode_pathtracer.hpp \
+   label_dock_widget.hpp
 
 FORMS    += plot_window.ui
 

@@ -181,6 +181,9 @@ void RenderView::paintEvent(
 //   painter.drawRect( viewRectAlwaysVisible );
 }
 
-void RenderView::resizeEvent( QResizeEvent *event ){
+void RenderView::resizeEvent(
+   QResizeEvent *event
+){
+   QWidget::resizeEvent( event );
    updateViewRect( event->size() );
 }

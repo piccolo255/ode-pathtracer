@@ -6,8 +6,10 @@
 #include <QList>
 #include <QLayout>
 #include <QSettings>
+#include <QDockWidget>
+#include <QMessageBox>
 #include <QtDebug>
-#include <QtWidgets>
+//#include <QtWidgets>
 
 // C headers
 #include <cstdlib>
@@ -26,6 +28,7 @@
 #include "runge_kutta_stepper.hpp"
 #include "render_view.hpp"
 #include "simulation_loop.hpp"
+#include "label_dock_widget.hpp"
 
 // OUT and IN can be redefined as a filestream
 // to enable direct file input/output
@@ -62,6 +65,9 @@ public:
    explicit PlotWindow( QWidget *parent = 0 );
    ~PlotWindow();
 
+signals:
+   void updateParamLabels( PointValues values );
+
 public slots:
    void updateView( PointValues newPoint );
 
@@ -90,6 +96,8 @@ private:
 
    // Labels
    QStringList labelNamesConfig;
+   LabelDockWidget *dockWidget;
+
    QStringList labelNames;
    QMap<QString, int> labelParamIndex;
    QMap<QString, QLabel*> valueLabels;
@@ -108,12 +116,8 @@ private:
    QStringList tokenizeString( QString &str );
    void toggleSimulationRun( bool toggled );
    void exitProgram( bool checked = false );
-   void addParamLabel( QString name, bool removable = true );
-   void removeParamLabel( QString name );
-   void updateParamLabels( PointValues values );
 
    template <class T> T readEntry(
-      //boost::property_tree::ptree pt
       QSettings *inputFile
     , QString section
     , QString name
