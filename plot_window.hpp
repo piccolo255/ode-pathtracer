@@ -8,6 +8,7 @@
 #include <QSettings>
 #include <QDockWidget>
 #include <QMessageBox>
+#include <QFileDialog>
 #include <QtDebug>
 //#include <QtWidgets>
 

@@ -47,14 +47,12 @@ void SimulationLoop::run(
          return;
 
       // limit update rate
-      int yields = 0;
       while( ( !updateTimer.hasExpired( minUpdateInterval ) || stateSuspend ) && !stateExit ){
-         yields++;
-         //yieldCurrentThread();
          long sleepDuration = minUpdateInterval-updateTimer.elapsed();
          sleepDuration = sleepDuration > 0 ? sleepDuration : 1;
          msleep( sleepDuration );
       }
+
       if( stateExit )
          return;
 

@@ -47,10 +47,10 @@ private:
    int varCount;
    int paramCount;
    double t;
-   double *vars;
-   double *params;
-   mu::Parser *varParser;
-   mu::Parser *paramParser;
+   double *vars = NULL;
+   double *params = NULL;
+   mu::Parser *varParser = NULL;
+   mu::Parser *paramParser = NULL;
 
    DerivationMode derivationMode;
    CalculationMode calculationMode;

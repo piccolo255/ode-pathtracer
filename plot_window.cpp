@@ -185,11 +185,18 @@ void PlotWindow::exitProgram(
 void PlotWindow::openProblem(
    bool /* checked */ // unused
 ){
-   loadProblem( "input.ini" );
+   QString file = QFileDialog::getOpenFileName( this,
+                                                tr("Open problem configuration file"),
+                                                QString(),
+                                                tr("Configuration files (*.ini);;All files (*.*)") );
 
-   closeProblemAction->setEnabled( true );
-   runAction->setChecked( false );
-   runAction->setEnabled( true );
+   if( !file.isNull() ){
+      loadProblem( file );
+
+      closeProblemAction->setEnabled( true );
+      runAction->setChecked( false );
+      runAction->setEnabled( true );
+   }
 }
 
 void PlotWindow::loadProblem(
@@ -245,9 +252,10 @@ void PlotWindow::closeProblem(
    // end simulation
    if( simulation != NULL ){
       simulation->stop();
-      while( simulation->isRunning() ){
-         ui->statusBar->showMessage( tr("Waiting for threads to stop...") );
-         QThread::yieldCurrentThread();\
+      ui->statusBar->showMessage( tr("Waiting for threads to stop...") );
+      if( !simulation->wait( 5000 ) ){
+         simulation->terminate();
+         simulation->wait();
       }
 
       delete simulation;
@@ -267,6 +275,18 @@ void PlotWindow::closeProblem(
       delete dockWidget;
       dockWidget = NULL;
    }
+
+   pointPath.clear();
+
+   paramNames.clear();
+   varNames.clear();
+   labelNames.clear();
+
+   paramRules.clear();
+   varRules.clear();
+
+   initialValues.Param.clear();
+   initialValues.Val.clear();
 
    // update window title
    setWindowTitle( tr("ODE PathTracer") );
