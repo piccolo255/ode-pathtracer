@@ -9,52 +9,43 @@ PlotWindow::PlotWindow(
 {
    ui->setupUi( this );
 
-//   // load input file
-//   inputData( filename );
-
-//   qDebug() << "Initial values: t = " << initialValues.T << ", " << initialValues.Val;
-
-//   pointPath.clear();
-
-//   // create render widget
-//   views.push_back( new RenderView( plotViewport, plotTransformX, plotTransformY, paramNames ) );
-//   //views.push_back( new RenderView( plotViewport, plotTransformX, plotTransformY, paramNames ) );
-
-   // set layout
+   // create layout
    mainLayout = new QGridLayout( ui->centralWidget );
-//   mainLayout->setColumnStretch( 0, 1 );
-//   mainLayout->setColumnStretch( 1, 1 );
-//   mainLayout->addWidget( views[0], 0, 0 );
-//   mainLayout->addWidget( views[1], 0, 1 );
-//   ui->centralWidget->setLayout( mainLayout );
 
    // create actions
-   QAction *runAction = new QAction( tr("&Run"), this );
+   openProblemAction = new QAction( tr("&Open"), this );
+   openProblemAction->setShortcut( QKeySequence( Qt::Key_O ) );
+   openProblemAction->setStatusTip( tr("Open problem.") );
+   connect( openProblemAction, &QAction::triggered, this, &PlotWindow::openProblem );
+
+   closeProblemAction = new QAction( tr("&Close"), this );
+   closeProblemAction->setShortcut( QKeySequence( Qt::Key_C ) );
+   closeProblemAction->setStatusTip( tr("Close problem.") );
+   closeProblemAction->setEnabled( false );
+   connect( closeProblemAction, &QAction::triggered, this, &PlotWindow::closeProblem );
+
+   runAction = new QAction( tr("&Run"), this );
    runAction->setShortcut( QKeySequence( Qt::Key_Space ) );
    runAction->setStatusTip( tr("Run or pause simulation.") );
    runAction->setCheckable( true );
+   runAction->setEnabled( false );
    connect( runAction, &QAction::toggled, this, &PlotWindow::toggleSimulationRun );
 
-   QAction *exitAction = new QAction( tr("&Exit"), this );
+   exitAction = new QAction( tr("&Exit"), this );
    exitAction->setShortcut( QKeySequence( Qt::Key_Escape ) );
    exitAction->setStatusTip( tr("Exit program.") );
    connect( exitAction, &QAction::triggered, this, &PlotWindow::exitProgram );
 
    // create dock for labels
    labelDock = new QDockWidget( tr("Labels"), this );
-//   dockWidget = new LabelDockWidget( paramNames, labelDock );
-//   connect( this, &PlotWindow::updateParamLabels, dockWidget, &LabelDockWidget::updateParamLabels );
-//   labelDock->setWidget( dockWidget );
    labelDock->setAllowedAreas( Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea );
    addDockWidget( Qt::RightDockWidgetArea, labelDock );
 
-//   // add predefined labels
-//   dockWidget->addParamLabel( "t", false );
-//   for( auto name : labelNamesConfig ){
-//      dockWidget->addParamLabel( name );
-//   }
 
    // make toolbar
+   ui->mainToolBar->addAction( openProblemAction );
+   ui->mainToolBar->addAction( closeProblemAction );
+   ui->mainToolBar->addSeparator();
    ui->mainToolBar->addAction( runAction );
    ui->mainToolBar->addSeparator();
    ui->mainToolBar->addAction( labelDock->toggleViewAction() );
@@ -64,35 +55,13 @@ PlotWindow::PlotWindow(
    // decorate window
    setWindowTitle( tr("ODE PathTracer") );
 
-//   // prepare stepper
-//   stepper = new RungeKuttaStepper;
-//   stepper->SetConditions( varRules, paramRules, initialValues, dt );
-
-   // start simulation
+   // register custom types so they can be used in slots/signals
    qRegisterMetaType<PointValues>();
-//   simulation = new SimulationLoop( plotMaxFPS, plotSkip, stepper );
-//   connect( simulation, &SimulationLoop::updateView, this, &PlotWindow::updateView );
-//   simulation->suspend();
-//   simulation->start();
-
-   openProblem( "input.ini" );
 }
 
 PlotWindow::~PlotWindow(
 ){
-   simulation->stop();
-   while( simulation->isRunning() ){
-      ui->statusBar->showMessage( tr("Waiting for threads to stop...") );
-      QThread::yieldCurrentThread();
-//      Sleep(100);
-   };
-
-//   delete dockWidget;
-   delete simulation;
-   delete stepper;
-   for( auto v : views ){
-      delete v;
-   }
+   closeProblem();
 
    delete ui;
 }
@@ -135,7 +104,7 @@ void PlotWindow::inputData(
    varNames   = readEntry<QStringList>( inputFile, SECTION_NAMES, "variable_names",  QStringList() );
 
    // label names
-   labelNamesConfig = readEntry<QStringList>( inputFile, SECTION_PLOT, "label_parameters", QStringList() );
+   labelNames = readEntry<QStringList>( inputFile, SECTION_PLOT, "label_parameters", QStringList() );
 
    // parameter equations
    paramRules.resize( paramNames.size() );
@@ -184,6 +153,9 @@ void PlotWindow::toggleSimulationRun(
    bool toggled
 ){
    //qDebug() << "Run clicked";
+   if( simulation == NULL ){
+      return;
+   }
    if( toggled ){
       //qDebug() << "::ON";
       simulation->resume();
@@ -211,8 +183,21 @@ void PlotWindow::exitProgram(
 }
 
 void PlotWindow::openProblem(
+   bool /* checked */ // unused
+){
+   loadProblem( "input.ini" );
+
+   closeProblemAction->setEnabled( true );
+   runAction->setChecked( false );
+   runAction->setEnabled( true );
+}
+
+void PlotWindow::loadProblem(
    const QString filename
 ){
+   // close problem if one is already opened
+   closeProblem();
+
    // load input file
    inputData( filename );
 
@@ -229,12 +214,12 @@ void PlotWindow::openProblem(
 
    // add predefined labels to label dock
    dockWidget->addParamLabel( "t", false );
-   for( auto name : labelNamesConfig ){
+   for( auto name : labelNames ){
       dockWidget->addParamLabel( name );
    }
 
    // update window title
-   setWindowTitle( filename + tr(" ODE PathTracer") );
+   setWindowTitle( filename + tr(" - ODE PathTracer") );
 
    // prepare stepper
    stepper = new RungeKuttaStepper;
@@ -245,9 +230,46 @@ void PlotWindow::openProblem(
    connect( simulation, &SimulationLoop::updateView, this, &PlotWindow::updateView );
    simulation->suspend();
    simulation->start();
+
+   ui->statusBar->showMessage( tr("Problem opened.") );
 }
 
 void PlotWindow::closeProblem(
+   bool /* checked */ // unused
 ){
+   // update gui elements
+   closeProblemAction->setEnabled( false );
+   runAction->setChecked( false );
+   runAction->setEnabled( false );
 
+   // end simulation
+   if( simulation != NULL ){
+      simulation->stop();
+      while( simulation->isRunning() ){
+         ui->statusBar->showMessage( tr("Waiting for threads to stop...") );
+         QThread::yieldCurrentThread();\
+      }
+
+      delete simulation;
+      simulation = NULL;
+   }
+   if( stepper != NULL ){
+      delete stepper;
+      stepper = NULL;
+   }
+
+   for( auto v : views ){
+      delete v;
+   }
+   views.clear();
+
+   if( dockWidget != NULL ){
+      delete dockWidget;
+      dockWidget = NULL;
+   }
+
+   // update window title
+   setWindowTitle( tr("ODE PathTracer") );
+
+   ui->statusBar->showMessage( tr("Problem closed.") );
 }

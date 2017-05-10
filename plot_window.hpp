@@ -73,12 +73,26 @@ public slots:
 
 private:
    Ui::PlotWindow *ui;
-   RungeKuttaStepper *stepper;
-   SimulationLoop *simulation;
 
+   // simulation objects
+   RungeKuttaStepper *stepper = NULL;
+   SimulationLoop    *simulation = NULL;
    QList<PointValues> pointPath;
+
+   // actions
+   QAction *runAction;
+   QAction *exitAction;
+   QAction *openProblemAction;
+   QAction *closeProblemAction;
+
+   // gui elements
+   QGridLayout *mainLayout = NULL;
+   QDockWidget *labelDock = NULL;
    QList<RenderView *> views;
-   QList<QLabel> labels;
+
+   // Labels
+   QStringList labelNames;
+   LabelDockWidget *dockWidget = NULL;
 
    // Names
    QStringList paramNames;
@@ -94,18 +108,6 @@ private:
    // Time parameters
    double dt;
 
-   // Labels
-   QStringList labelNamesConfig;
-   LabelDockWidget *dockWidget;
-
-   QGridLayout *mainLayout;
-   QDockWidget *labelDock;
-
-//   QStringList labelNames;
-//   QMap<QString, int> labelParamIndex;
-//   QMap<QString, QLabel*> valueLabels;
-//   QGridLayout *labelLayout;
-
    // Plot parameters
    QString plotTransformX;
    QString plotTransformY;
@@ -119,8 +121,9 @@ private:
    QStringList tokenizeString( QString &str );
    void toggleSimulationRun( bool toggled );
    void exitProgram( bool checked = false );
-   void openProblem( const QString filename );
-   void closeProblem();
+   void openProblem( bool checked = false );
+   void loadProblem( const QString filename );
+   void closeProblem( bool checked = false );
 
    template <class T> T readEntry(
       QSettings *inputFile
